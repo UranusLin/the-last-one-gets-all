@@ -8,8 +8,8 @@
     "packages/*"
   ],
   "scripts": {
-    "frontend": "yarn workspace frontend start",
-    "contracts": "yarn workspace contracts hardhat compile",
+    "frontend": "yarn workspace frontend",
+    "contracts": "yarn workspace contracts",
     "start": "lerna run start --stream",
     "build": "lerna run build --stream",
     "test": "lerna run test --stream",
@@ -20,7 +20,6 @@
     "dev": "concurrently \"yarn start:node\" \"yarn deploy:local\" \"yarn start:frontend\""
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-ethers": "^3.0.6",
     "ethers": "^6.13.1",
     "hardhat-deploy": "^0.12.4",
     "hardhat-deploy-ethers": "^0.4.2",
