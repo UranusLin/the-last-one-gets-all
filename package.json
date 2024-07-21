@@ -1,0 +1,32 @@
+{
+  "name": "the-last-one-gets-all",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "frontend": "yarn workspace frontend start",
+    "contracts": "yarn workspace contracts hardhat compile",
+    "start": "lerna run start --stream",
+    "build": "lerna run build --stream",
+    "test": "lerna run test --stream",
+    "lint": "lerna run lint --stream",
+    "start:node": "yarn workspace contracts hardhat node",
+    "deploy:local": "yarn workspace contracts hardhat run scripts/deploy.ts --network localhost",
+    "start:frontend": "yarn workspace frontend start",
+    "dev": "concurrently \"yarn start:node\" \"yarn deploy:local\" \"yarn start:frontend\""
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.6",
+    "ethers": "^6.13.1",
+    "hardhat-deploy": "^0.12.4",
+    "hardhat-deploy-ethers": "^0.4.2",
+    "lerna": "^8.1.6"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
