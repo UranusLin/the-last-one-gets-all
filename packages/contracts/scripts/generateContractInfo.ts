@@ -29,7 +29,7 @@ async function main() {
 
                 const outputData = {
                     abi: contractData.abi,
-                    address: "CONTRACT_ADDRESS_PLACEHOLDER" // 您可以在这里设置实际的合约地址
+                    address: "CONTRACT_ADDRESS_PLACEHOLDER"
                 };
 
                 const outputPath = path.join(outputDir, jsonFile);
