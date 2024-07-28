@@ -29,7 +29,8 @@ async function main() {
 
                 const outputData = {
                     abi: contractData.abi,
-                    address: "CONTRACT_ADDRESS_PLACEHOLDER"
+                    address: "PROXY_ADDRESS_PLACEHOLDER",
+                    implementationAddress: "IMPLEMENTATION_ADDRESS_PLACEHOLDER"
                 };
 
                 const outputPath = path.join(outputDir, jsonFile);

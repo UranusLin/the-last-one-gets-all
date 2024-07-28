@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import {BaseContract, Contract, ContractTransactionResponse} from "ethers";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
@@ -11,15 +11,17 @@ interface GameContractMethods {
     pause(): Promise<ContractTransactionResponse>;
     unpause(): Promise<ContractTransactionResponse>;
     emergencyWithdraw(): Promise<ContractTransactionResponse>;
+    owner(): Promise<string>;
 }
 
-type GameContract = BaseContract & GameContractMethods & {
+type GameContract = BaseContract & Contract & GameContractMethods & {
     connect(signer: HardhatEthersSigner): GameContract;
 };
+
 async function deployGameContractFixture() {
     const [owner, addr1, addr2] = await ethers.getSigners();
     const GameContract = await ethers.getContractFactory("GameContract");
-    const gameContract = (await GameContract.deploy({ value: ethers.parseEther("0.1") })) as unknown as GameContract;
+    const gameContract = await upgrades.deployProxy(GameContract, [], { initializer: 'initialize' }) as unknown as GameContract;
     await gameContract.waitForDeployment();
     return { gameContract, owner, addr1, addr2 };
 }
@@ -119,5 +121,25 @@ describe("GameContract", function () {
             ethers.parseEther("0.1"),
             ethers.parseEther("0.01") // Allow for gas costs
         );
+    });
+
+    it("Should be upgradeable", async function () {
+        const { gameContract, owner } = await loadFixture(deployGameContractFixture);
+        const GameContractV2 = await ethers.getContractFactory("GameContract");
+
+        // upgradeProxy will deploy a new contract and transfer the balance
+        await upgrades.upgradeProxy(await gameContract.getAddress(), GameContractV2);
+
+        // check if the owner is still the same
+        expect(await gameContract.owner()).to.equal(owner.address);
+
+        // check if the balance is still the same
+        const [lastCaller, lastCallTime, balance, isGameRunning] = await gameContract.getGameStatus();
+        expect(lastCaller).to.equal(ethers.ZeroAddress);
+        expect(isGameRunning).to.be.true;
+
+        // check if new methods are working as expected
+        // example: const expectedValue = 42;
+        // expect(await gameContract.newMethodInV2()).to.equal(expectedValue);
     });
 });

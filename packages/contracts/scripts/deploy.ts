@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import fs from 'fs';
 import path from 'path';
 
@@ -8,18 +8,25 @@ async function main() {
     console.log("Deploying contracts with the account:", deployer.address);
 
     const GameContract = await ethers.getContractFactory("GameContract");
-    const gameContract = await GameContract.deploy({ value: ethers.parseEther("0.1") });
+    const gameContract = await upgrades.deployProxy(GameContract, [], {
+        initializer: 'initialize',
+        kind: 'uups'
+    });
 
     await gameContract.waitForDeployment();
 
     const contractAddress = await gameContract.getAddress();
 
-    console.log("GameContract deployed to:", contractAddress);
+    console.log("GameContract proxy deployed to:", contractAddress);
 
-    updateFrontendFiles(contractAddress);
+    // 獲取實現合約地址
+    const implementationAddress = await upgrades.erc1967.getImplementationAddress(contractAddress);
+    console.log("GameContract implementation deployed to:", implementationAddress);
+
+    updateFrontendFiles(contractAddress, implementationAddress);
 }
 
-function updateFrontendFiles(contractAddress: string) {
+function updateFrontendFiles(proxyAddress: string, implementationAddress: string) {
     const contractsDir = path.join(__dirname, '..', '..', 'frontend', 'src', 'contracts');
 
     if (!fs.existsSync(contractsDir)) {
@@ -28,13 +35,18 @@ function updateFrontendFiles(contractAddress: string) {
 
     const contractConfigFile = path.join(contractsDir, 'GameContract.json');
 
-    let contractConfig = { address: '', abi: [] };
+    let contractConfig = {
+        address: '',
+        implementationAddress: '',
+        abi: []
+    };
     if (fs.existsSync(contractConfigFile)) {
         const rawConfig = fs.readFileSync(contractConfigFile, 'utf8');
         contractConfig = JSON.parse(rawConfig);
     }
 
-    contractConfig.address = contractAddress;
+    contractConfig.address = proxyAddress;
+    contractConfig.implementationAddress = implementationAddress;
 
     const artifact = require('../artifacts/contracts/GameContract.sol/GameContract.json');
     contractConfig.abi = artifact.abi;

@@ -2,12 +2,21 @@
 pragma solidity ^0.8.24;
 
 import "./interfaces/IGameContract.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
-contract GameContract is IGameContract, ReentrancyGuard, Pausable {
+contract GameContract is
+IGameContract,
+Initializable,
+ReentrancyGuardUpgradeable,
+PausableUpgradeable,
+UUPSUpgradeable,
+OwnableUpgradeable
+{
     address public lastCaller;
-    address private owner;
     uint64 public lastCallTime;
     uint64 public lastBlockNumber;
     uint256 public constant CALL_COST = 0.01 ether;
@@ -16,10 +25,21 @@ contract GameContract is IGameContract, ReentrancyGuard, Pausable {
     event GameCalled(address caller, uint256 amount);
     event GameEnded(address winner, uint256 prize);
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not the owner");
-        _;
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
     }
+
+    function initialize() public initializer {
+        __ReentrancyGuard_init();
+        __Pausable_init();
+        __Ownable_init();
+        __UUPSUpgradeable_init();
+
+        lastCallTime = uint64(block.timestamp);
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function pause() external onlyOwner {
         _pause();
@@ -27,12 +47,6 @@ contract GameContract is IGameContract, ReentrancyGuard, Pausable {
 
     function unpause() external onlyOwner {
         _unpause();
-    }
-
-    constructor() payable Pausable() {
-        require(msg.value == 0.1 ether, "Initial funding must be 0.1 ETH");
-        lastCallTime = uint64(block.timestamp);
-        owner = msg.sender;
     }
 
     function call() external payable override whenNotPaused {
@@ -77,6 +91,6 @@ contract GameContract is IGameContract, ReentrancyGuard, Pausable {
 
     function emergencyWithdraw() external onlyOwner {
         _pause();
-        payable(owner).transfer(address(this).balance);
+        payable(owner()).transfer(address(this).balance);
     }
 }

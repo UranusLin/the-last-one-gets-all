@@ -10,4 +10,7 @@ interface IGameContract {
         uint256 _balance,
         bool _isGameRunning
     );
+    function pause() external;
+    function unpause() external;
+    function emergencyWithdraw() external;
 }
