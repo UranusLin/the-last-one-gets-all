@@ -13,4 +13,5 @@ interface IGameContract {
     function pause() external;
     function unpause() external;
     function emergencyWithdraw() external;
+    function initializeGameBalance() external payable;
 }

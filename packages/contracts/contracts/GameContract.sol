@@ -21,6 +21,7 @@ OwnableUpgradeable
     uint64 public lastBlockNumber;
     uint256 public constant CALL_COST = 0.01 ether;
     uint64 public constant GAME_DURATION = 24 hours;
+    uint256 public gameBalance;
 
     event GameCalled(address caller, uint256 amount);
     event GameEnded(address winner, uint256 prize);
@@ -33,10 +34,20 @@ OwnableUpgradeable
     function initialize() public initializer {
         __ReentrancyGuard_init();
         __Pausable_init();
-        __Ownable_init();
+        __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
 
         lastCallTime = uint64(block.timestamp);
+        gameBalance = 0;
+    }
+
+    function initializeGameBalance() external payable onlyOwner {
+        require(gameBalance == 0, "Game balance already initialized");
+        gameBalance = msg.value;
+    }
+
+    receive() external payable {
+        gameBalance += msg.value;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -57,6 +68,7 @@ OwnableUpgradeable
         lastCaller = msg.sender;
         lastCallTime = uint64(block.timestamp);
         lastBlockNumber = uint64(block.number);
+        gameBalance += msg.value;
 
         emit GameCalled(msg.sender, msg.value);
     }
@@ -65,13 +77,14 @@ OwnableUpgradeable
         require(block.timestamp - lastCallTime >= GAME_DURATION, "Game is still running");
         require(msg.sender == lastCaller, "Only last caller can claim the prize");
 
-        uint256 prize = address(this).balance;
+        uint256 prize = gameBalance;
 
         lastCallTime = uint64(block.timestamp);
         lastCaller = address(0);
 
         emit GameEnded(msg.sender, prize);
 
+        gameBalance = 0;
         payable(msg.sender).transfer(prize);
     }
 
@@ -84,13 +97,15 @@ OwnableUpgradeable
         return (
             lastCaller,
             lastCallTime,
-            address(this).balance,
+            gameBalance,
             !paused() && (block.timestamp - lastCallTime < GAME_DURATION)
         );
     }
 
     function emergencyWithdraw() external onlyOwner {
         _pause();
-        payable(owner()).transfer(address(this).balance);
+        uint256 amount = gameBalance;
+        gameBalance = 0;
+        payable(owner()).transfer(amount);
     }
 }
