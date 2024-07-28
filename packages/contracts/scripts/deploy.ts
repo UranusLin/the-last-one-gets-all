@@ -19,7 +19,6 @@ async function main() {
 
     console.log("GameContract proxy deployed to:", contractAddress);
 
-    // 獲取實現合約地址
     const implementationAddress = await upgrades.erc1967.getImplementationAddress(contractAddress);
     console.log("GameContract implementation deployed to:", implementationAddress);
 
