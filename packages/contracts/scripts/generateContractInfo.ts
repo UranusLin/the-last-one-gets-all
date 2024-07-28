@@ -9,7 +9,7 @@ async function main() {
     console.log('Output directory:', outputDir);
 
     if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
+        fs.mkdirSync(outputDir, {recursive: true});
         console.log('Created output directory');
     }
 

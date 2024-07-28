@@ -1,4 +1,4 @@
-import { ethers, upgrades } from "hardhat";
+import {ethers, upgrades} from "hardhat";
 import fs from 'fs';
 import path from 'path';
 
@@ -29,7 +29,7 @@ function updateFrontendFiles(proxyAddress: string, implementationAddress: string
     const contractsDir = path.join(__dirname, '..', '..', 'frontend', 'src', 'contracts');
 
     if (!fs.existsSync(contractsDir)) {
-        fs.mkdirSync(contractsDir, { recursive: true });
+        fs.mkdirSync(contractsDir, {recursive: true});
     }
 
     const contractConfigFile = path.join(contractsDir, 'GameContract.json');

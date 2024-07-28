@@ -95,8 +95,8 @@ describe("GameContract", function () {
     });
 
     it("Should update game status correctly", async function () {
-        const { gameContract, addr1 } = await loadFixture(deployGameContractFixture);
-        await gameContract.connect(addr1).call({ value: ethers.parseEther("0.01") });
+        const {gameContract, addr1} = await loadFixture(deployGameContractFixture);
+        await gameContract.connect(addr1).call({value: ethers.parseEther("0.01")});
         const [_lastCaller, _lastCallTime, _balance, _isGameRunning] = await gameContract.getGameStatus();
 
         expect(_lastCaller).to.equal(addr1.address);
@@ -108,7 +108,7 @@ describe("GameContract", function () {
     });
 
     it("Should not allow non-owner to pause the contract", async function () {
-        const { gameContract, addr1 } = await loadFixture(deployGameContractFixture);
+        const {gameContract, addr1} = await loadFixture(deployGameContractFixture);
         await expect(gameContract.connect(addr1).pause())
             .to.be.revertedWithCustomError(gameContract, "OwnableUnauthorizedAccount");
     });
@@ -120,7 +120,7 @@ describe("GameContract", function () {
     });
 
     it("Should allow owner to perform emergency withdraw", async function () {
-        const { gameContract, owner } = await loadFixture(deployGameContractFixture);
+        const {gameContract, owner} = await loadFixture(deployGameContractFixture);
         const initialBalance = await ethers.provider.getBalance(owner.address);
         const tx = await gameContract.connect(owner).emergencyWithdraw();
         await tx.wait();
